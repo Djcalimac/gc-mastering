@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#050507" />
+  <title>Mastering Platform | Core Experience</title>
+
+  <style>
+    :root {
+      --bg-deep: #050507;
+      --bg-panel: #111318;
+      --bg-element: #1c1f26;
+
+      --accent-blue: #2962ff;
+      --accent-cyan: #00d4ff;
+      --accent-green: #00e676;
+      --accent-purple: #d500f9;
+      --accent-orange: #ff9100;
+
+      --text-main: #ffffff;
+      --text-muted: #8b9bb4;
+
+      --border-radius: 16px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+      --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+      --safe-area-top: env(safe-area-inset-top, 20px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; padding: 0; background-color: var(--bg-deep); color: var(--text-main);
+      font-family: var(--font-family); height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    h1, h2, h3 { margin: 0; font-weight: 700; -webkit-font-smoothing: antialiased; letter-spacing: -0.5px; }
+    p { margin: 0 0 10px 0; color: var(--text-muted); line-height: 1.5; font-size: 0.9rem; }
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .center { align-items: center; justify-content: center; }
+    .col { flex-direction: column; }
+    .spaced { justify-content: space-between; }
+
+    header {
+      height: 60px; padding: 0 20px; padding-top: var(--safe-area-top); background: rgba(17, 19, 24, 0.95);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; z-index: 100;
+    }
+    .brand { font-size: 1.2rem; font-weight: 800; background: linear-gradient(90deg, #fff, #8b9bb4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    main { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; padding-bottom: 140px; -webkit-overflow-scrolling: touch; }
+    section { padding: 20px; max-width: 600px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card { background: var(--bg-panel); border-radius: var(--border-radius); padding: 20px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); }
+
+    .upload-zone {
+      border: 2px dashed rgba(255,255,255,0.2); border-radius: var(--border-radius);
+      min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.3s; background: rgba(255,255,255,0.02); text-align: center; padding: 20px;
+    }
+    .upload-zone:hover { border-color: var(--accent-cyan); background: rgba(0, 212, 255, 0.05); }
+    .file-meta { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; }
+    .meta-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; }
+    .meta-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .meta-value { font-size: 0.95rem; font-weight: 600; color: var(--accent-cyan); margin-top: 4px; }
+    .warning-text { color: var(--accent-orange); font-size: 0.8rem; margin-top: 10px; display: none; }
+
+    .analysis-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; }
+    #orbCanvas { width: 200px; height: 200px; margin-bottom: 30px; }
+    .analysis-text { font-size: 1.2rem; font-weight: 600; color: #fff; min-height: 1.5em; }
+    .analysis-sub { font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
+
+    .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+    .preset-btn {
+      background: var(--bg-element); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+      padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s;
+      user-select: none;
+    }
+    .preset-btn.active { background: var(--accent-blue); border-color: var(--accent-blue); color: white; box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4); }
+    .preset-icon { font-size: 1.5rem; margin-bottom: 5px; display: block; }
+    .preset-name { font-size: 0.85rem; font-weight: 600; }
+
+    .waveform-display {
+      width: 100%; height: 120px; background: #000; border-radius: 12px;
+      position: relative; overflow: hidden; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);
+    }
+    canvas#waveformCanvas { width: 100%; height: 100%; display: block; }
+    .play-overlay {
+      position: absolute; top:0; left:0; width:100%; height:100%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.3); transition: opacity 0.2s;
+      cursor: pointer;
+      user-select: none;
+    }
+    .play-btn-circle {
+      width: 50px; height: 50px; background: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .play-triangle { width: 0; height: 0; border-left: 12px solid #000; border-top: 8px solid transparent; border-bottom: 8px solid transparent; margin-left: 4px; }
+    .pause-bars { width: 14px; height: 14px; position: relative; }
+    .pause-bars::before, .pause-bars::after {
+      content: ""; position: absolute; top: 0; width: 4px; height: 14px; background: #000; border-radius: 2px;
+    }
+    .pause-bars::before { left: 0; }
+    .pause-bars::after { right: 0; }
+
+    .ab-toggle {
+      height: 48px;
+
+      display: flex; background: var(--bg-element); border-radius: 30px; padding: 4px;
+      position: relative; margin-bottom: 25px; cursor: pointer; user-select: none; touch-action: manipulation;
+    }
+    .ab-option { flex: 1; text-align: center; padding: 10px 0; font-size: 0.85rem; font-weight: 700; z-index: 2; transition: color 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ab-slider {
+      position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px);
+      background: var(--bg-deep); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1;
+    }
+    .ab-toggle.mastered .ab-slider { transform: translateX(100%); background: var(--accent-blue); border-color: var(--accent-blue); }
+    .ab-toggle.mastered .opt-b { color: #fff; }
+    .ab-toggle:not(.mastered) .opt-a { color: #fff; }
+    .ab-toggle:not(.mastered) .opt-b, .ab-toggle.mastered .opt-a { color: var(--text-muted); }
+
+    .slider-group { margin-bottom: 20px; }
+    .slider-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; }
+    .slider-val { color: var(--accent-cyan); }
+
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%;
+      background: #fff; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%; height: 4px; cursor: pointer; background: #333; border-radius: 2px;
+    }
+    input[type=range]:focus { outline: none; }
+
+    .format-select {
+      display: flex; background: var(--bg-element); border-radius: 8px; padding: 4px; margin-bottom: 20px;
+    }
+    .format-option {
+      flex: 1; text-align: center; padding: 10px; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--text-muted);
+      user-select: none;
+    }
+    .format-option.active { background: var(--accent-green); color: #000; }
+
+    .sticky-bar {
+      position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(17, 19, 24, 0.95);
+      backdrop-filter: blur(10px); border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 15px 20px; padding-bottom: calc(15px + var(--safe-area-bottom));
+      display: flex; gap: 10px; z-index: 200; transform: translateZ(0);
+    }
+    .btn {
+      flex: 1; border: none; padding: 16px; border-radius: 12px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: transform 0.1s; touch-action: manipulation;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent-blue); color: white; box-shadow: 0 4px 20px rgba(41, 98, 255, 0.4); }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
+      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal { background: var(--bg-panel); width: 100%; max-width: 420px; padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">MEGA<span>BLUEPRINT</span></div>
+    <div style="font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan);">GC v1/05</div>
+  </header>
+
+  <main id="mainContainer">
+
+    <section id="screen-upload">
+      <h2 style="margin-bottom: 20px;">Upload Track</h2>
+      
+
+      <label class="upload-zone" id="dropZone" for="fileInput" style="position:relative;">
+        <input type="file" id="fileInput" accept=".wav,.aif,.aiff,.mp3,.m4a,audio/wav,audio/x-wav,audio/aiff,audio/mpeg,audio/mp4,audio/aac" style="position:absolute; left:0; top:0; width:1px; height:1px; opacity:0.01;" />
+        <div style="font-size: 3rem; margin-bottom: 15px; opacity: 0.8;">☁️</div>
+        <h3>Drag & Drop or Tap</h3>
+        <p>WAV / AIFF preferred</p>
+
+        <div id="fileInfoDisplay" class="hidden">
+          <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-top: 15px;" id="fileName">Song.wav</div>
+          <div class="warning-text" id="mp3Warning">⚠️ MP3 detected. Quality loss may occur.</div>
+        </div>
+      </label>
+
+      <div id="autoDetectResults" class="hidden file-meta">
+        <div class="meta-item">
+          <div class="meta-label">Genre</div>
+          <div class="meta-value" id="detectedGenre">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Tempo</div>
+          <div class="meta-value" id="detectedBpm">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Loudness</div>
+          <div class="meta-value" id="detectedLoud">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Peak</div>
+          <div class="meta-value" id="detectedPeak">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-analyzing" class="hidden">
+      <div class="analysis-container">
+        <canvas id="orbCanvas"></canvas>
+        <div class="analysis-text" id="analysisText">Initializing Engine...</div>
+        <div class="analysis-sub" id="analysisSub">Connecting to audio graph</div>
+      </div>
+    </section>
+
+    <section id="screen-preview" class="hidden">
+      <div class="waveform-display">
+        <canvas id="waveformCanvas"></canvas>
+        <div class="play-overlay" id="playOverlay" role="button" aria-label="Play/Pause">
+          <div class="play-btn-circle">
+            <div class="play-triangle" id="playIcon"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-toggle" id="abToggle" role="button" aria-label="A/B Toggle">
+        <div class="ab-slider"></div>
+        <div class="ab-option opt-a">Original</div>
+        <div class="ab-option opt-b">Mastered</div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+          <div style="flex:1; min-width:150px;">
+            <div class="meta-label" style="margin-bottom:6px;">Mode</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <div class="format-option active" id="modeSmart" style="flex:0 0 auto; padding:10px 12px; background:rgba(255,255,255,0.08); color:#fff;">Auto (Smart)</div>
+              <div class="format-option" id="modeManual" style="flex:0 0 auto; padding:10px 12px;">Choose</div>
+              <div class="format-option" id="modeSurprise" style="flex:0 0 auto; padding:10px 12px;">Surprise Me</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:180px;">
+            <div class="meta-label" style="margin-bottom:6px;">Platform Target</div>
+            <select id="platformSelect" style="width:100%; padding:12px; border-radius:10px; background:var(--bg-element); color:#fff; border:1px solid rgba(255,255,255,0.12); outline:none;">
+              <option value="auto">Auto (Smart)</option>
+              <option value="spotify">Spotify</option>
+              <option value="apple">Apple Music</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok / Shorts</option>
+              <option value="club">Club / Performance</option>
+              <option value="broadcast">Film / Broadcast</option>
+            </select>
+          </div>
+
+          <div style="flex:1; min-width:180px;">
+            <div class="meta-label" style="margin-bottom:6px;">Genre Profile</div>
+            <select id="genreSelect" style="width:100%; padding:12px; border-radius:10px; background:var(--bg-element); color:#fff; border:1px solid rgba(255,255,255,0.12); outline:none;">
+              <option value="auto">Auto (Smart)</option>
+              <option value="trap">Trap</option>
+              <option value="rb">R&amp;B</option>
+              <option value="hiphop">Hip-Hop</option>
+              <option value="pop">Pop</option>
+              <option value="drill">Drill</option>
+              <option value="westcoast">West Coast</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:180px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+              <div class="meta-label" style="margin-bottom:0;">Playback Translation</div>
+              <label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
+                <span style="font-size:0.82rem; color:var(--text-muted); font-weight:700;">Preview</span>
+                <span style="position:relative; width:46px; height:26px; display:inline-block;">
+                  <input id="translationToggle" type="checkbox" style="opacity:0; width:0; height:0; position:absolute;">
+                  <span id="translationToggleUI" style="position:absolute; inset:0; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.18); border-radius:999px; transition:0.2s;"></span>
+                  <span id="translationKnob" style="position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:999px; transition:0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.35);"></span>
+                </span>
+              </label>
+            </div>
+            <select id="translationSelect" style="width:100%; padding:12px; border-radius:10px; background:var(--bg-element); color:#fff; border:1px solid rgba(255,255,255,0.12); outline:none;">
+              <option value="studio">🎧 Studio monitors</option>
+              <option value="car">🚗 Car systems</option>
+              <option value="phone">📱 Phone speakers</option>
+              <option value="bt">🔊 Bluetooth speakers</option>
+              <option value="tv">🎥 TV / soundbar</option>
+              <option value="earbuds">🎶 Earbuds</option>
+            </select>
+          </div>
+        </div>
+
+
+        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <div style="color:var(--text-muted); font-size:0.85rem;">
+            Engine chooses the safest loudness/ceiling and a genre curve when set to Auto.
+          </div>
+          <button class="btn btn-secondary" id="btnApplyMode" style="flex:0 0 auto; padding:12px 14px; border-radius:12px;">Apply</button>
+        </div>
+      </div>
+
+
+        
+<div class="ab-option opt-a">Original</div>
+        <div class="ab-option opt-b">Mastered</div>
+      </div>
+
+      <h3 style="margin-bottom: 15px;">Style Presets</h3>
+      <div class="preset-grid" id="presetGrid"></div>
+
+      <h3 style="margin: 25px 0 15px;">Adjustments</h3>
+
+      <div class="slider-group">
+        <div class="slider-header"><span>Loudness</span> <span class="slider-val" id="val-loudness">0 dB</span></div>
+        <input id="slider-loudness" type="range" min="-10" max="10" step="0.5" value="0">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header"><span>Bass</span> <span class="slider-val" id="val-bass">0 dB</span></div>
+        <input id="slider-bass" type="range" min="-12" max="12" step="0.5" value="0">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header"><span>Clarity</span> <span class="slider-val" id="val-clarity">0 dB</span></div>
+        <input id="slider-clarity" type="range" min="-12" max="12" step="0.5" value="0">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header"><span>Width</span> <span class="slider-val" id="val-width">0%</span></div>
+        <input id="slider-width" type="range" min="0" max="100" step="1" value="0">
+      </div>
+    </section>
+
+    <section id="screen-export" class="hidden">
+      <div class="center flex col" style="padding-top: 40px; text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 20px;">🚀</div>
+        <h2>Master Ready</h2>
+        <p>Select format to download.</p>
+
+        <div class="format-select">
+          <div class="format-option active" data-fmt="wav">WAV 24-bit</div>
+          <div class="format-option" data-fmt="wav16">WAV 16-bit</div>
+        </div>
+
+        <div class="card" id="masterReportCard" style="width:100%; max-width:520px; text-align:left; margin: 10px 0 18px 0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <h3 style="font-size:1.05rem;">Master Report</h3>
+            <div style="font-size:0.8rem; font-weight:700; color: var(--accent-cyan);" id="reportBadge">READY</div>
+          </div>
+          <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="meta-item">
+              <div class="meta-label">Loudness Target</div>
+              <div class="meta-value" id="reportTarget">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Measured LUFS</div>
+              <div class="meta-value" id="reportLufs">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">True Peak</div>
+              <div class="meta-value" id="reportTP">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Peak Safety</div>
+              <div class="meta-value" id="reportSafety">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Mono / Phase</div>
+              <div class="meta-value" id="reportMono">—</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Platform Readiness</div>
+              <div class="meta-value" id="reportPlatform">—</div>
+            </div>
+          </div>
+          <div style="margin-top:10px; color:var(--text-muted); font-size:0.85rem;" id="reportNotes">—</div>
+        </div>
+
+        
+
+        <button class="btn btn-primary" style="width: 100%; max-width: 300px;" id="btnDownload">
+          Download Master
+        </button>
+        <button class="btn btn-secondary" style="width: 100%; max-width: 300px; margin-top: 10px; background: transparent;" id="btnReset">
+          Start Over
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="sticky-bar" id="stickyBar">
+    <button class="btn btn-secondary hidden" id="btnBack" onclick="app.goBack()">Back</button>
+    <button class="btn btn-primary hidden" id="btnAction" onclick="app.nextStep()">Analyze</button>
+  </div>
+
+  <div class="modal-overlay hidden" id="errorModal">
+    <div class="modal">
+      <h3>Notice</h3>
+      <p id="errorMessage">Message</p>
+      <button class="btn btn-primary" id="btnModalOk">OK</button>
+    </div>
+  </div>
+
+  <script>
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+    const PRESETS = {
+      trap:     { name: "Trap / Drill",      icon: "🔥", bass: 4,  clarity: 6,  width: 20, loudness: 2 },
+      vocal:    { name: "Vocal Forward",     icon: "🎤", bass: -2, clarity: 8,  width: 10, loudness: 1 },
+      wide:     { name: "Wide & Clean",      icon: "🌊", bass: 0,  clarity: 4,  width: 80, loudness: 0 },
+      streaming:{ name: "Streaming Ready",   icon: "💿", bass: 2,  clarity: 3,  width: 30, loudness: 3 },
+      car:      { name: "Car Test",          icon: "🚗", bass: 8,  clarity: 2,  width: 50, loudness: 2 }
+    };
+
+
+    const PLATFORM_TARGETS = {
+      auto:      { name: "Auto (Smart)",        ceilingDb: -1.0, targetLUFS: -14.0 },
+      spotify:   { name: "Spotify",             ceilingDb: -1.0, targetLUFS: -14.0 },
+      apple:     { name: "Apple Music",         ceilingDb: -1.0, targetLUFS: -16.0 },
+      youtube:   { name: "YouTube",             ceilingDb: -1.0, targetLUFS: -14.0 },
+      tiktok:    { name: "TikTok / Shorts",     ceilingDb: -0.8, targetLUFS: -11.0 },
+      club:      { name: "Club / Performance",  ceilingDb: -0.6, targetLUFS: -9.0 },
+      broadcast: { name: "Film / Broadcast",    ceilingDb: -2.0, targetLUFS: -24.0 }
+    };
+
+    const GENRE_PROFILES = {
+      auto:      { name: "Auto (Smart)", vibe: "balanced" },
+      trap:      { name: "Trap",         vibe: "impact" },
+      rb:        { name: "R&B",          vibe: "smooth" },
+      hiphop:    { name: "Hip-Hop",      vibe: "punch" },
+      pop:       { name: "Pop",          vibe: "bright" },
+      drill:     { name: "Drill",        vibe: "aggressive" },
+      westcoast: { name: "West Coast",   vibe: "bounce" }
+    };
+
+    const ANALYSIS_STAGES = [
+      "Analyzing dynamics...",
+      "Optimizing tonal balance...",
+      "Checking stereo integrity...",
+      "Setting output ceiling...",
+      "Finalizing render path..."
+    ];
+
+    const STATE = {
+      file: null,
+      audioBuffer: null,
+      screen: "screen-upload",
+      history: [],
+      isPlaying: false,
+      isMastered: false,
+      format: "wav",
+
+      audioContext: null,
+
+      source: null,
+      bassFilter: null,
+      clarityFilter: null,
+      widener: null,
+      masterGain: null,
+      limiter: null,
+
+      waveform: { canvas: null, ctx: null, dpr: 1, w: 0, h: 0 },
+
+      params: { loudness: 0, bass: 0, clarity: 0, width: 0 },
+      mode: { kind: "smart", platform: "auto", genre: "auto" },
+      monitor: null,
+      translation: "studio",
+
+
+      
+      translationEnabled: false,
+      lastObjectUrl: null,
+
+      orbRaf: 0
+    };
+
+    const app = {
+      init: () => {
+        STATE.audioContext = new AudioContextClass();
+
+        
+
+        
+
+        STATE._platformCeilingDb = -1.0;
+        app._resolved = null;
+        STATE.monitor = null;
+        STATE.translation = "studio";
+        STATE.translationEnabled = false;
+
+        const unlock = async () => {
+          try {
+            if (STATE.audioContext && STATE.audioContext.state === "suspended") {
+              await STATE.audioContext.resume();
+            }
+          } catch (_) {}
+          window.removeEventListener("touchstart", unlock, true);
+          window.removeEventListener("click", unlock, true);
+        };
+        window.addEventListener("touchstart", unlock, true);
+        window.addEventListener("click", unlock, true);
+app.setupUpload();
+        app.setupPresets();
+        app.setupWaveformCanvas();
+        app.bindUI();
+        app.updateButtons();
+
+        window.addEventListener("resize", () => {
+          app.setupWaveformCanvas();
+          app.drawWaveform();
+        });
+      },
+
+      bindUI: () => {
+        document.getElementById("abToggle").addEventListener("click", (e) => {
+          e.preventDefault();
+          app.toggleAB();
+        });
+
+        document.getElementById("playOverlay").addEventListener("click", (e) => {
+          e.preventDefault();
+          app.togglePlay();
+        });
+
+        document.getElementById("btnBack").addEventListener("click", () => app.goBack());
+        document.getElementById("btnAction").addEventListener("click", () => app.nextStep());
+
+        document.getElementById("btnModalOk").addEventListener("click", () => {
+          document.getElementById("errorModal").classList.add("hidden");
+        });
+
+        document.getElementById("btnReset").addEventListener("click", () => app.reset());
+
+        document.querySelectorAll(".format-option").forEach(el => {
+          el.addEventListener("click", () => app.setFormat(el.dataset.fmt, el));
+        });
+
+        document.getElementById("btnDownload").addEventListener("click", () => app.downloadMaster());
+
+
+        const modeSmart = document.getElementById("modeSmart");
+        const modeManual = document.getElementById("modeManual");
+        const modeSurprise = document.getElementById("modeSurprise");
+        const platformSelect = document.getElementById("platformSelect");
+        const genreSelect = document.getElementById("genreSelect");
+        const btnApplyMode = document.getElementById("btnApplyMode");
+        const translationSelect = document.getElementById("translationSelect");
+        const translationToggle = document.getElementById("translationToggle");
+
+
+        const setModeButtonState = (kind) => {
+          [modeSmart, modeManual, modeSurprise].forEach(b => b && b.classList.remove("active"));
+          if (kind === "smart") modeSmart && modeSmart.classList.add("active");
+          if (kind === "manual") modeManual && modeManual.classList.add("active");
+          if (kind === "surprise") modeSurprise && modeSurprise.classList.add("active");
+        };
+
+        const applyMode = (kind) => {
+          STATE.mode.kind = kind;
+
+          if (kind === "smart") {
+            platformSelect.value = "auto";
+            genreSelect.value = "auto";
+            STATE.mode.platform = "auto";
+            STATE.mode.genre = "auto";
+            app.applySmartMode();
+          } else if (kind === "surprise") {
+            app.applySurpriseMode();
+          } else {
+            STATE.mode.platform = platformSelect.value || "auto";
+            STATE.mode.genre = genreSelect.value || "auto";
+            app.applyManualMode();
+          }
+
+          setModeButtonState(kind);
+
+          if (STATE._chain) app.updateAudioNodes();
+        };
+
+        modeSmart && modeSmart.addEventListener("click", () => applyMode("smart"));
+        modeManual && modeManual.addEventListener("click", () => applyMode("manual"));
+        modeSurprise && modeSurprise.addEventListener("click", () => applyMode("surprise"));
+
+        btnApplyMode && btnApplyMode.addEventListener("click", () => {
+          const kind = STATE.mode.kind || "smart";
+          if (kind === "manual") {
+            STATE.mode.platform = platformSelect.value || "auto";
+            STATE.mode.genre = genreSelect.value || "auto";
+            app.applyManualMode();
+          } else if (kind === "smart") {
+            app.applySmartMode();
+          } else {
+            app.applySurpriseMode();
+          }
+          if (STATE._chain) app.updateAudioNodes();
+          app.showToast("Mode applied");
+        });
+
+        
+        
+        translationToggle && translationToggle.addEventListener("change", () => {
+          app.applyTranslationEnabled(translationToggle.checked === true);
+        });
+
+translationSelect && translationSelect.addEventListener("change", () => {
+          STATE.translation = translationSelect.value || "studio";
+          if (STATE.translationEnabled) app.applyTranslationProfile(STATE.translation);
+});
+        if (translationSelect) {
+          translationSelect.value = STATE.translation || "studio";
+        }
+        if (translationToggle) {
+          translationToggle.checked = STATE.translationEnabled === true;
+          app.applyTranslationEnabled(translationToggle.checked === true);
+        }
+
+
+platformSelect && platformSelect.addEventListener("change", () => {
+          if (STATE.mode.kind !== "manual") return;
+          STATE.mode.platform = platformSelect.value || "auto";
+        });
+
+        genreSelect && genreSelect.addEventListener("change", () => {
+          if (STATE.mode.kind !== "manual") return;
+          STATE.mode.genre = genreSelect.value || "auto";
+        });
+
+
+        const sliderMap = [
+          ["loudness", "slider-loudness"],
+          ["bass", "slider-bass"],
+          ["clarity", "slider-clarity"],
+          ["width", "slider-width"]
+        ];
+
+        sliderMap.forEach(([key, id]) => {
+          const el = document.getElementById(id);
+          el.addEventListener("input", () => app.updateSlider(key, el.value));
+        });
+      },
+
+      setupMonitoring: (ctx) => {
+        if (STATE.monitor && STATE.monitor.input) return;
+
+        const input = ctx.createGain();
+
+        const dryGain = ctx.createGain();
+        const eqGain = ctx.createGain();
+
+        const eq1 = ctx.createBiquadFilter();
+        const eq2 = ctx.createBiquadFilter();
+        const eq3 = ctx.createBiquadFilter();
+
+        const out = ctx.createGain();
+
+        input.connect(dryGain);
+        dryGain.connect(out);
+
+        input.connect(eqGain);
+        eqGain.connect(eq1);
+        eq1.connect(eq2);
+        eq2.connect(eq3);
+        eq3.connect(out);
+
+        STATE.monitor = { input, output: out, dryGain, eqGain, eq1, eq2, eq3 };
+
+        app.applyTranslationEnabled(STATE.translationEnabled === true);
+        app.applyTranslationProfile(STATE.translation || "studio");
+      },
+
+      applyTranslationEnabled: (enabled) => {
+        STATE.translationEnabled = !!enabled;
+        const m = STATE.monitor;
+        if (!m) return;
+
+        const now = STATE.audioContext ? STATE.audioContext.currentTime : 0;
+        const t = now;
+
+        if (STATE.translationEnabled) {
+          m.dryGain.gain.setTargetAtTime(0.0, t, 0.05);
+          m.eqGain.gain.setTargetAtTime(1.0, t, 0.05);
+        } else {
+          m.dryGain.gain.setTargetAtTime(1.0, t, 0.05);
+          m.eqGain.gain.setTargetAtTime(0.0, t, 0.05);
+        }
+
+        const sel = document.getElementById("translationSelect");
+        if (sel) sel.disabled = !STATE.translationEnabled;
+        const ui = document.getElementById("translationToggleUI");
+        const knob = document.getElementById("translationKnob");
+        if (ui && knob) {
+          ui.style.background = STATE.translationEnabled ? "rgba(0, 230, 118, 0.45)" : "rgba(255,255,255,0.14)";
+          ui.style.borderColor = STATE.translationEnabled ? "rgba(0, 230, 118, 0.65)" : "rgba(255,255,255,0.18)";
+          knob.style.transform = STATE.translationEnabled ? "translateX(20px)" : "translateX(0px)";
+        }
+      },
+
+      applyTranslationProfile: (key) => {
+        STATE.translation = key;
+
+        const m = STATE.monitor;
+        if (!m) return;
+
+        const setFlat = () => {
+          m.eq1.type = "peaking"; m.eq1.frequency.value = 1000; m.eq1.Q.value = 0.7; m.eq1.gain.value = 0;
+          m.eq2.type = "peaking"; m.eq2.frequency.value = 1000; m.eq2.Q.value = 0.7; m.eq2.gain.value = 0;
+          m.eq3.type = "peaking"; m.eq3.frequency.value = 1000; m.eq3.Q.value = 0.7; m.eq3.gain.value = 0;
+        };
+
+        if (key === "studio") {
+          setFlat();
+          return;
+        }
+
+        if (key === "car") {
+          m.eq1.type = "lowshelf"; m.eq1.frequency.value = 120; m.eq1.Q.value = 0.7; m.eq1.gain.value = 4.0;
+          m.eq2.type = "peaking";  m.eq2.frequency.value = 3000; m.eq2.Q.value = 1.0; m.eq2.gain.value = -1.5;
+          m.eq3.type = "highshelf";m.eq3.frequency.value = 8000; m.eq3.Q.value = 0.7; m.eq3.gain.value = -1.0;
+          return;
+        }
+
+        if (key === "phone") {
+          m.eq1.type = "highpass"; m.eq1.frequency.value = 200; m.eq1.Q.value = 0.7; m.eq1.gain.value = 0;
+          m.eq2.type = "peaking";  m.eq2.frequency.value = 2000; m.eq2.Q.value = 0.9; m.eq2.gain.value = 2.0;
+          m.eq3.type = "lowpass";  m.eq3.frequency.value = 5200; m.eq3.Q.value = 0.7; m.eq3.gain.value = 0;
+          return;
+        }
+
+        if (key === "bt") {
+          m.eq1.type = "lowshelf"; m.eq1.frequency.value = 140; m.eq1.Q.value = 0.7; m.eq1.gain.value = 2.5;
+          m.eq2.type = "peaking";  m.eq2.frequency.value = 1200; m.eq2.Q.value = 0.8; m.eq2.gain.value = -1.0;
+          m.eq3.type = "highshelf";m.eq3.frequency.value = 9000; m.eq3.Q.value = 0.7; m.eq3.gain.value = 2.0;
+          return;
+        }
+
+        if (key === "tv") {
+          m.eq1.type = "lowshelf"; m.eq1.frequency.value = 180; m.eq1.Q.value = 0.7; m.eq1.gain.value = 1.0;
+          m.eq2.type = "peaking";  m.eq2.frequency.value = 2800; m.eq2.Q.value = 1.0; m.eq2.gain.value = 2.0;
+          m.eq3.type = "highshelf";m.eq3.frequency.value = 9000; m.eq3.Q.value = 0.7; m.eq3.gain.value = -0.5;
+          return;
+        }
+
+        if (key === "earbuds") {
+          m.eq1.type = "lowshelf"; m.eq1.frequency.value = 120; m.eq1.Q.value = 0.7; m.eq1.gain.value = 1.5;
+          m.eq2.type = "peaking";  m.eq2.frequency.value = 3500; m.eq2.Q.value = 0.9; m.eq2.gain.value = 1.0;
+          m.eq3.type = "highshelf";m.eq3.frequency.value = 10000; m.eq3.Q.value = 0.7; m.eq3.gain.value = 1.5;
+          return;
+        }
+
+        setFlat();
+      },
+
+      readFileAsArrayBuffer: (file) => {
+        return new Promise((resolve, reject) => {
+          try {
+            if (file && typeof file.arrayBuffer === "function") {
+              file.arrayBuffer().then(resolve).catch(() => {
+                try {
+                  const reader = new FileReader();
+                  reader.onerror = () => reject(reader.error || new Error("FileReader error"));
+                  reader.onload = () => resolve(reader.result);
+                  reader.readAsArrayBuffer(file);
+                } catch (e2) { reject(e2); }
+              });
+              return;
+            }
+          } catch (_) {}
+
+          try {
+            const reader = new FileReader();
+            reader.onerror = () => reject(reader.error || new Error("FileReader error"));
+            reader.onload = () => resolve(reader.result);
+            reader.readAsArrayBuffer(file);
+          } catch (e) { reject(e); }
+        });
+      },
+
+      setupUpload: () => {
+        const zone = document.getElementById("dropZone");
+        const input = document.getElementById("fileInput");
+
+                input.addEventListener("change", (e) => {
+          const files = (e.target && e.target.files) ? e.target.files : null;
+          const f = files && files.length ? files[0] : null;
+          if (!f) {
+            app.showModal("No file received from iOS picker. Tap Choose File again.");
+            return;
+          }
+          app.handleFile(f);
+          try { input.value = ""; } catch (_) {}
+        });
+
+zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.style.borderColor = "#00d4ff";
+        });
+
+        zone.addEventListener("dragleave", () => {
+          zone.style.borderColor = "rgba(255,255,255,0.2)";
+        });
+
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.style.borderColor = "rgba(255,255,255,0.2)";
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          app.handleFile(f);
+        });
+      },
+
+      handleFile: async (file) => {
+        if (!file) return;
+
+        STATE.file = file;
+
+        document.getElementById("fileInfoDisplay").classList.remove("hidden");
+        document.getElementById("fileName").innerText = file.name || "Untitled";
+
+        const isMp3Name = (file.name || "").toLowerCase().endsWith(".mp3");
+        const isMp3Type = file.type === "audio/mpeg";
+        document.getElementById("mp3Warning").style.display = (isMp3Name || isMp3Type) ? "block" : "none";
+
+        document.getElementById("autoDetectResults").classList.remove("hidden");
+        document.getElementById("detectedGenre").innerText = "—";
+        document.getElementById("detectedBpm").innerText = "—";
+        document.getElementById("detectedLoud").innerText = "—";
+        document.getElementById("detectedPeak").innerText = "—";
+
+        app.updateButtons();
+        app.showToast("Loading audio…");
+
+        try {
+          if ((file.size || 0) === 0) {
+            app.showModal("This file is 0 KB (not fully downloaded). In Files, download it first or move it to On My iPhone, then try again.");
+            throw new Error("Zero-size file");
+          }
+
+          const arrayBuffer = await app.readFileAsArrayBuffer(file);
+          if (!arrayBuffer || (arrayBuffer.byteLength || 0) === 0) {
+            app.showModal("iOS didn’t provide readable audio data. Try a different file or re-export as WAV.");
+            throw new Error("Empty ArrayBuffer");
+          }
+
+          if (STATE.audioContext.state === "suspended") {
+          try { await STATE.audioContext.resume(); } catch (e) { throw e; }
+        }
+          STATE.audioBuffer = await STATE.audioContext.decodeAudioData(arrayBuffer.slice(0));
+
+          app.showToast("Audio loaded ✅");
+
+          const stats = app.computeBasicStats(STATE.audioBuffer);
+          document.getElementById("detectedPeak").innerText = `${stats.peakDb.toFixed(1)} dB`;
+          document.getElementById("detectedLoud").innerText = `${stats.rmsDb.toFixed(1)} dB RMS`;
+
+          const guess = app.guessGenreAndTempo(STATE.audioBuffer);
+          document.getElementById("detectedGenre").innerText = guess.genre;
+          document.getElementById("detectedBpm").innerText = guess.bpm;
+
+          app.updateButtons();
+        } catch (e) {
+          console.error(e);
+          if (STATE.audioBuffer) return;
+          STATE.file = null;
+          STATE.audioBuffer = null;
+          app.updateButtons();
+        }
+      },
+
+      computeBasicStats: (buffer) => {
+        let peak = 0;
+        let sumSq = 0;
+        let n = 0;
+
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+          const data = buffer.getChannelData(ch);
+          for (let i = 0; i < data.length; i++) {
+            const x = data[i];
+            const ax = Math.abs(x);
+            if (ax > peak) peak = ax;
+            sumSq += x * x;
+            n++;
+          }
+        }
+
+        const rms = Math.sqrt(sumSq / Math.max(1, n));
+        const peakDb = 20 * Math.log10(Math.max(1e-12, peak));
+        const rmsDb = 20 * Math.log10(Math.max(1e-12, rms));
+
+        return { peak, rms, peakDb, rmsDb };
+      },
+
+
+      computeIntegratedLUFS: (buffer) => {
+        const sr = buffer.sampleRate || 44100;
+        const chs = buffer.numberOfChannels || 1;
+
+        const hp = app._biquadCoeffsHighpass(sr, 60.0, 0.707);
+        const hs = app._biquadCoeffsHighshelf(sr, 4000.0, 0.707, 4.0);
+
+        const blockSize = Math.floor(0.400 * sr);
+        const hop = Math.floor(0.100 * sr);
+        if (blockSize < 1 || hop < 1) return { lufs: -70, ungated: -70 };
+
+        const maxLen = buffer.length;
+        const energies = [];
+
+        const zHP = [];
+        const zHS = [];
+        for (let c = 0; c < chs; c++) {
+          zHP.push({ x1:0, x2:0, y1:0, y2:0 });
+          zHS.push({ x1:0, x2:0, y1:0, y2:0 });
+        }
+
+        const applyBiquad = (x, b, z) => {
+          const y = b.b0*x + b.b1*z.x1 + b.b2*z.x2 - b.a1*z.y1 - b.a2*z.y2;
+          z.x2 = z.x1; z.x1 = x;
+          z.y2 = z.y1; z.y1 = y;
+          return y;
+        };
+
+        for (let start = 0; start + blockSize <= maxLen; start += hop) {
+          let sum = 0;
+          for (let i = 0; i < blockSize; i++) {
+            const idx = start + i;
+            let framePow = 0;
+            for (let c = 0; c < chs; c++) {
+              const d = buffer.getChannelData(c)[idx];
+              const y1 = applyBiquad(d, hp, zHP[c]);
+              const y2 = applyBiquad(y1, hs, zHS[c]);
+              framePow += y2 * y2;
+            }
+            sum += framePow / chs;
+          }
+          const ms = sum / blockSize;
+          energies.push(ms);
+        }
+
+        const toLUFS = (ms) => -0.691 + 10 * Math.log10(Math.max(1e-12, ms));
+        const ungatedMs = energies.reduce((a,b)=>a+b,0) / Math.max(1, energies.length);
+        const ungatedLU = toLUFS(ungatedMs);
+
+        const absGateLU = -70.0;
+        const absGateMs = Math.pow(10, (absGateLU + 0.691)/10);
+
+        const relGateLU = ungatedLU - 10.0;
+        const relGateMs = Math.pow(10, (relGateLU + 0.691)/10);
+
+        const gated = energies.filter(ms => ms >= absGateMs && ms >= relGateMs);
+        const gatedMs = gated.reduce((a,b)=>a+b,0) / Math.max(1, gated.length);
+        const lufs = toLUFS(gatedMs);
+
+        return { lufs, ungated: ungatedLU };
+      },
+
+      _biquadCoeffsHighpass: (sr, freq, q) => {
+        const w0 = 2*Math.PI*freq/sr;
+        const cos = Math.cos(w0), sin = Math.sin(w0);
+        const alpha = sin/(2*q);
+        const b0 =  (1+cos)/2;
+        const b1 = -(1+cos);
+        const b2 =  (1+cos)/2;
+        const a0 =  1+alpha;
+        const a1 = -2*cos;
+        const a2 =  1-alpha;
+        return { b0:b0/a0, b1:b1/a0, b2:b2/a0, a1:a1/a0, a2:a2/a0 };
+      },
+
+      _biquadCoeffsHighshelf: (sr, freq, q, gainDb) => {
+        const A = Math.pow(10, gainDb/40);
+        const w0 = 2*Math.PI*freq/sr;
+        const cos = Math.cos(w0), sin = Math.sin(w0);
+        const alpha = sin/(2*q);
+        const sqrtA = Math.sqrt(A);
+
+        const b0 =    A*((A+1) + (A-1)*cos + 2*sqrtA*alpha);
+        const b1 = -2*A*((A-1) + (A+1)*cos);
+        const b2 =    A*((A+1) + (A-1)*cos - 2*sqrtA*alpha);
+        const a0 =        (A+1) - (A-1)*cos + 2*sqrtA*alpha;
+        const a1 =    2*((A-1) - (A+1)*cos);
+        const a2 =        (A+1) - (A-1)*cos - 2*sqrtA*alpha;
+
+        return { b0:b0/a0, b1:b1/a0, b2:b2/a0, a1:a1/a0, a2:a2/a0 };
+      },
+
+      estimateTruePeakDb: (buffer, oversampleFactor = 4) => {
+        const chs = buffer.numberOfChannels || 1;
+        const len = buffer.length || 0;
+
+        let peak = 0;
+
+        const interpPeak = (a, b, t) => a + (b - a) * t;
+
+        for (let c = 0; c < chs; c++) {
+          const d = buffer.getChannelData(c);
+          for (let i = 0; i < len - 1; i++) {
+            const a = d[i], b = d[i+1];
+            const aa = Math.abs(a);
+            if (aa > peak) peak = aa;
+
+            for (let k = 1; k < oversampleFactor; k++) {
+              const t = k / oversampleFactor;
+              const v = interpPeak(a, b, t);
+              const av = Math.abs(v);
+              if (av > peak) peak = av;
+            }
+          }
+          const last = Math.abs(d[len-1] || 0);
+          if (last > peak) peak = last;
+        }
+
+        return 20 * Math.log10(Math.max(1e-12, peak));
+      },
+
+      runQC: (renderedBuffer, platformKey) => {
+        const integrity = app.analyzeIntegrity(renderedBuffer, STATE.file);
+        const lufs = app.computeIntegratedLUFS(renderedBuffer).lufs;
+        const tpDb = app.estimateTruePeakDb(renderedBuffer, 4);
+
+        const corr = integrity.phaseCorr ?? 1;
+
+        const issues = [];
+
+        if (integrity.clipCount > 0) issues.push("Clipping detected");
+        if (tpDb > (STATE._platformCeilingDb ?? -1.0) + 0.2) issues.push("Inter-sample peak risk");
+        if (corr < 0.15) issues.push("Mono collapse risk");
+        if (Math.abs(corr) < 0.05) issues.push("Phase instability");
+
+        const lowSmear = app._lowEndSmear(renderedBuffer);
+        if (lowSmear > 0.35) issues.push("Low-end smear");
+
+        const harsh = app._harshnessSpike(renderedBuffer);
+        if (harsh > 0.42) issues.push("Harsh resonance spikes");
+
+        const codecRisk = app._codecRisk(renderedBuffer);
+        if (codecRisk > 0.7) issues.push("Codec distortion risk");
+
+        return { issues, lufs, tpDb, phaseCorr: corr, integrity };
+      },
+
+      _lowEndSmear: (buffer) => {
+        if (buffer.numberOfChannels < 2) return 0;
+        const sr = buffer.sampleRate || 44100;
+        const n = Math.min(buffer.length, sr * 10);
+        const L = buffer.getChannelData(0);
+        const R = buffer.getChannelData(1);
+
+        let mid = 0, side = 0;
+
+        for (let i = 0; i < n; i++) {
+          const m = 0.5*(L[i]+R[i]);
+          const s = 0.5*(L[i]-R[i]);
+          if (i % 3 === 0) {
+            mid += m*m;
+            side += s*s;
+          }
+        }
+        const sideRatio = side / Math.max(1e-12, mid + side);
+        return sideRatio;
+      },
+
+      _harshnessSpike: (buffer) => {
+        const sr = buffer.sampleRate || 44100;
+        const data = buffer.getChannelData(0);
+        const n = Math.min(buffer.length, sr * 8);
+        let zcr = 0;
+        for (let i = 1; i < n; i++) {
+          if ((data[i-1] >= 0) !== (data[i] >= 0)) zcr++;
+        }
+        const z = zcr / Math.max(1, n);
+        return Math.min(1, z * 1200);
+      },
+
+      _codecRisk: (buffer) => {
+        const hf = app.estimateHighFreqEnergy(buffer);
+        const stats = app.computeBasicStats(buffer);
+        let risk = 0;
+        if (hf.hfRatio < 0.03) risk += 0.5;
+        if (stats.peakDb > -0.6) risk += 0.3;
+        if (stats.rmsDb > -14) risk += 0.2;
+        return Math.max(0, Math.min(1, risk));
+      },
+
+      guessGenreAndTempo: (buffer) => {
+        const dur = buffer.duration || 0;
+        const sr = buffer.sampleRate || 44100;
+        const n = Math.min(buffer.length, Math.floor(sr * 60));
+        const ch0 = buffer.getChannelData(0);
+        let energy = 0;
+
+        for (let i = 0; i < n; i++) energy += Math.abs(ch0[i]);
+        const avg = energy / Math.max(1, n);
+
+        const genre = avg > 0.12 ? "Hip Hop" : avg > 0.08 ? "Pop" : avg > 0.05 ? "R&B" : "Electronic";
+        const bpmGuess = dur < 120 ? "120 BPM" : dur < 180 ? "96 BPM" : "84 BPM";
+
+        return { genre, bpm: bpmGuess };
+      },
+
+
+      applySmartMode: () => {
+        if (!STATE.audioBuffer) return;
+        const integrity = app.analyzeIntegrity(STATE.audioBuffer, STATE.file);
+        const stats = app.computeBasicStats(STATE.audioBuffer);
+
+        let platform = "spotify";
+        if (integrity.clipCount > 0 || integrity.headroomDb < 0.8) platform = "spotify";
+        else platform = "spotify";
+
+        let genre = "hiphop";
+        if (stats.rmsDb > -15 && integrity.crestDb < 9) genre = "trap";
+        if (integrity.phaseCorr < 0.2) genre = "rb";
+        if (stats.rmsDb < -20) genre = "pop";
+
+        STATE.mode.platform = "auto";
+        STATE.mode.genre = "auto";
+
+        app._resolved = { platform, genre };
+
+        app.autoSetFromTargets(platform, genre);
+      },
+
+      applyManualMode: () => {
+        const platform = STATE.mode.platform || "spotify";
+        const genre = STATE.mode.genre || "hiphop";
+        app._resolved = { platform, genre };
+        app.autoSetFromTargets(platform, genre);
+      },
+
+      applySurpriseMode: () => {
+        const platforms = ["spotify", "apple", "youtube", "tiktok", "club"];
+        const genres = ["trap", "rb", "hiphop", "pop", "drill", "westcoast"];
+        const platform = platforms[Math.floor(Math.random() * platforms.length)];
+        const genre = genres[Math.floor(Math.random() * genres.length)];
+        STATE.mode.platform = "auto";
+        STATE.mode.genre = "auto";
+        app._resolved = { platform, genre };
+        app.autoSetFromTargets(platform, genre);
+      },
+
+      autoSetFromTargets: (platformKey, genreKey) => {
+        const plat = PLATFORM_TARGETS[platformKey] || PLATFORM_TARGETS.spotify;
+
+        const genrePresetMap = {
+          trap: "trap",
+          drill: "trap",
+          rb: "vocal",
+          hiphop: "streaming",
+          pop: "wide",
+          westcoast: "car"
+        };
+
+        const presetKey = genrePresetMap[genreKey] || "streaming";
+        app.applyPreset(presetKey);
+
+        if (STATE.audioBuffer) {
+          const meas = app.computeIntegratedLUFS(STATE.audioBuffer);
+          const currentLUFS = meas.lufs;
+          const targetLUFS = plat.targetLUFS;
+
+          const delta = targetLUFS - currentLUFS;
+          const loudness = Math.max(-10, Math.min(10, delta / 2.0));
+
+          STATE.params.loudness = loudness;
+          app.updateSliderUI();
+        }
+
+        STATE._platformCeilingDb = plat.ceilingDb;
+      },
+
+      runAnalysis: async () => {
+        if (!STATE.file || !STATE.audioBuffer) {
+          app.showModal("Upload a track first.");
+          return;
+        }
+
+        app.navigateTo("screen-analyzing");
+        app.startOrbAnimation();
+
+        const textEl = document.getElementById("analysisText");
+        const subEl = document.getElementById("analysisSub");
+
+        let stage = 0;
+        const interval = setInterval(() => {
+          if (stage >= ANALYSIS_STAGES.length) {
+            clearInterval(interval);
+            setTimeout(() => {
+              app.stopOrbAnimation();
+              app.navigateTo("screen-preview");
+              app.applyPreset("streaming");
+              app.applySmartMode();
+              app.drawWaveform();
+              app.updateButtons();
+            }, 350);
+            return;
+          }
+          textEl.innerText = ANALYSIS_STAGES[stage];
+          subEl.innerText = `Processing module ${stage + 1} of ${ANALYSIS_STAGES.length}`;
+          stage++;
+        }, 650);
+      },
+
+      startOrbAnimation: () => {
+        const canvas = document.getElementById("orbCanvas");
+        const ctx = canvas.getContext("2d");
+        const size = 200;
+        canvas.width = size;
+        canvas.height = size;
+
+        let t = 0;
+        const draw = () => {
+          ctx.clearRect(0, 0, size, size);
+
+          const radius = 52 + Math.sin(t * 0.06) * 6;
+          const grad = ctx.createRadialGradient(100, 100, 12, 100, 100, radius + 28);
+          grad.addColorStop(0, "#00d4ff");
+          grad.addColorStop(0.5, "#2962ff");
+          grad.addColorStop(1, "transparent");
+
+          ctx.beginPath();
+          ctx.arc(100, 100, radius + 26, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255,255,255,0.22)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(100, 100, radius + 32, t * 0.1, t * 0.1 + Math.PI);
+          ctx.stroke();
+
+          t++;
+          STATE.orbRaf = requestAnimationFrame(draw);
+        };
+        draw();
+      },
+
+      stopOrbAnimation: () => {
+        cancelAnimationFrame(STATE.orbRaf);
+      },
+
+      setupPresets: () => {
+        const grid = document.getElementById("presetGrid");
+        grid.innerHTML = "";
+
+        Object.keys(PRESETS).forEach(key => {
+          const p = PRESETS[key];
+          const div = document.createElement("div");
+          div.className = "preset-btn";
+          div.id = `preset-${key}`;
+          div.innerHTML = `<span class="preset-icon">${p.icon}</span><span class="preset-name">${p.name}</span>`;
+          div.addEventListener("click", () => app.applyPreset(key));
+          grid.appendChild(div);
+        });
+      },
+
+      applyPreset: (key) => {
+        const p = PRESETS[key];
+        STATE.params = { loudness: p.loudness, bass: p.bass, clarity: p.clarity, width: p.width };
+
+        document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+        const active = document.getElementById(`preset-${key}`);
+        if (active) active.classList.add("active");
+
+        app.updateSliderUI();
+
+        if (STATE.isPlaying && STATE.isMastered) app.updateAudioNodes();
+      },
+
+      getActivePresetKey: () => {
+        const el = document.querySelector(".preset-btn.active");
+        if (!el) return null;
+        const id = el.id || "";
+        const m = id.match(/^preset-(.+)$/);
+        return m ? m[1] : null;
+      },
+
+      updateSlider: (type, val) => {
+        STATE.params[type] = parseFloat(val);
+        const text = (type === "width")
+          ? `${Math.round(STATE.params.width)}%`
+          : `${STATE.params[type] > 0 ? "+" : ""}${STATE.params[type].toFixed(1)} dB`;
+
+        document.getElementById(`val-${type}`).innerText = text;
+
+        document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+
+        if (STATE.isMastered && STATE.isPlaying) app.updateAudioNodes();
+      },
+
+      updateSliderUI: () => {
+        const map = [
+          ["loudness", "slider-loudness"],
+          ["bass", "slider-bass"],
+          ["clarity", "slider-clarity"],
+          ["width", "slider-width"]
+        ];
+        map.forEach(([k, id]) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.value = STATE.params[k];
+          app.updateSlider(k, el.value);
+        });
+      },
+
+      togglePlay: async () => {
+        if (!STATE.audioBuffer) return;
+
+        if (STATE.isPlaying) {
+          app.stopAudio();
+        } else {
+          try {
+            await app.playAudio();
+          } catch (e) {
+            console.error(e);
+            app.showModal("Playback failed: " + (e && (e.name || e.message) ? ((e.name||"Error") + (e.message? (": " + e.message):"")) : "Unknown error") + "\n\nTip: If you have AirPlay/Bluetooth connected, toggle it off/on and retry. You can also reload the page.");
+          }
+        }
+      },
+
+      playAudio: async () => {
+        if (STATE.audioContext.state === "suspended") await STATE.audioContext.resume();
+
+        app.stopAudio();
+
+        const ctx = STATE.audioContext;
+
+        STATE.source = ctx.createBufferSource();
+        STATE.source.buffer = STATE.audioBuffer;
+
+        const integrity = app.analyzeIntegrity(STATE.audioBuffer, STATE.file);
+        const presetKey = app.getActivePresetKey() || "streaming";
+
+        const chain = app.createMasterChain(ctx, STATE.params, integrity, presetKey, true);
+
+        STATE.source.connect(chain.input);
+        app.setupMonitoring(ctx);
+        chain.output.connect(STATE.monitor.input);
+        STATE.monitor.output.connect(ctx.destination);
+
+        STATE._chain = chain;
+
+        app.updateAudioNodes();
+
+        STATE.source.start(0);
+        STATE.isPlaying = true;
+        app.updatePlayButton();
+
+        STATE.source.onended = () => {
+          STATE.isPlaying = false;
+          app.updatePlayButton();
+        };
+      },
+
+      stopAudio: () => {
+        if (STATE.source) {
+          try { STATE.source.stop(); } catch (_) {}
+        }
+        STATE.source = null;
+        STATE._chain = null;
+        STATE.isPlaying = false;
+        app.updatePlayButton();
+      },
+
+      toggleAB: () => {
+        if (STATE.isPlaying) {
+          app.showToast("Pause playback to switch A/B");
+          return;
+        }
+        STATE.isMastered = !STATE.isMastered;
+        document.getElementById("abToggle").classList.toggle("mastered", STATE.isMastered);
+        app.drawWaveform();
+      },
+
+      updateAudioNodes: () => {
+        const chain = STATE._chain;
+        if (!chain) return;
+
+        const ctx = STATE.audioContext;
+        const now = ctx.currentTime;
+
+        const integrity = app.analyzeIntegrity(STATE.audioBuffer, STATE.file);
+        const presetKey = app.getActivePresetKey() || "streaming";
+        const targets = app.computeProgramTargets(integrity, presetKey);
+
+        if (!STATE.isMastered) {
+          chain.targets = targets;
+          chain.sat.mix.gain.setTargetAtTime(0.0, now, 0.08);
+          chain.sat.dry.gain.setTargetAtTime(1.0, now, 0.08);
+
+          chain.limiter && app.setLimiterCeiling(chain.limiter, (STATE._platformCeilingDb ?? -1.0), now);
+          app.setWidenerAmount(chain.haas, 0, now);
+
+          chain.output.gain?.setTargetAtTime?.(1.0, now, 0.08);
+          return;
+        }
+
+        const harshCut = -targets.harshCut;
+        chain.mb && chain.mb.output && void 0;
+
+        const loudGain = Math.max(0.25, 1 + ((STATE.params.loudness || 0) / 10));
+
+        chain.sat.drive.gain.setTargetAtTime(1.25 + Math.max(0, (STATE.params.loudness || 0)) * 0.05, now, 0.08);
+        chain.sat.mix.gain.setTargetAtTime(0.18 + Math.max(0, (STATE.params.loudness || 0)) * 0.01, now, 0.08);
+        chain.sat.dry.gain.setTargetAtTime(1 - chain.sat.mix.gain.value, now, 0.08);
+
+        const safeWidth = Math.min(targets.safeWidthMax, Math.max(0, Math.min(100, STATE.params.width || 0)));
+        app.setWidenerAmount(chain.haas, safeWidth, now);
+
+        chain.limiter && app.setLimiterCeiling(chain.limiter, (STATE._platformCeilingDb ?? -1.0), now);
+
+        chain._loudGain && chain._loudGain.gain.setTargetAtTime(loudGain, now, 0.08);
+      },
+
+      createHaasWidener: (ctx) => {
+        const splitter = ctx.createChannelSplitter(2);
+        const merger = ctx.createChannelMerger(2);
+
+        const dryL = ctx.createGain();
+        const dryR = ctx.createGain();
+
+        const xL = ctx.createGain();
+        const xR = ctx.createGain();
+
+        const dL = ctx.createDelay(0.05);
+        const dR = ctx.createDelay(0.05);
+
+        splitter.connect(dryL, 0);
+        splitter.connect(dryR, 1);
+
+        splitter.connect(dR, 0);
+        splitter.connect(dL, 1);
+
+        dR.connect(xR);
+        dL.connect(xL);
+
+        dryL.connect(merger, 0, 0);
+        dryR.connect(merger, 0, 1);
+
+        xL.connect(merger, 0, 0);
+        xR.connect(merger, 0, 1);
+
+        dryL.gain.value = 1.0;
+        dryR.gain.value = 1.0;
+
+        xL.gain.value = 0.0;
+        xR.gain.value = 0.0;
+
+        dL.delayTime.value = 0.0;
+        dR.delayTime.value = 0.0;
+
+        return { splitter, merger, dryL, dryR, xL, xR, dL, dR };
+      },
+
+      setWidenerAmount: (widener, width, now) => {
+        const amt = Math.max(0, Math.min(100, width)) / 100;
+
+        const ms = 0.000 + amt * 0.02;
+        const cross = amt * 0.35;
+
+        widener.dL.delayTime.setTargetAtTime(ms, now, 0.08);
+        widener.dR.delayTime.setTargetAtTime(ms, now, 0.08);
+
+        widener.xL.gain.setTargetAtTime(cross, now, 0.08);
+        widener.xR.gain.setTargetAtTime(cross, now, 0.08);
+      },
+
+      createSoftLimiter: (ctx) => {
+        const input = ctx.createGain();
+        const shaper = ctx.createWaveShaper();
+        const makeup = ctx.createGain();
+        const output = ctx.createGain();
+
+        input.connect(shaper);
+        shaper.connect(makeup);
+        makeup.connect(output);
+
+        shaper.oversample = "4x";
+
+        const limiter = { input, output, shaper, makeup, ceilingDb: -0.3 };
+        app.setLimiterCeiling(limiter, -0.3, ctx.currentTime);
+        return limiter;
+      },
+
+      setLimiterCeiling: (limiter, ceilingDb, now) => {
+        limiter.ceilingDb = ceilingDb;
+        const ceilingLin = Math.pow(10, ceilingDb / 20);
+
+        const curve = new Float32Array(65536);
+        for (let i = 0; i < curve.length; i++) {
+          const x = (i / (curve.length - 1)) * 2 - 1;
+          const ax = Math.abs(x);
+          const sign = x < 0 ? -1 : 1;
+
+          const knee = 0.6;
+          let y = ax;
+
+          if (ax > knee) {
+            const t = (ax - knee) / (1 - knee);
+            y = knee + (1 - knee) * (1 - Math.exp(-3.2 * t));
+          }
+
+          y = Math.min(1, y);
+          curve[i] = sign * y;
+        }
+
+        limiter.shaper.curve = curve;
+
+        limiter.makeup.gain.setTargetAtTime(ceilingLin, now, 0.05);
+      },
+
+      
+
+      analyzeIntegrity: (buffer, file) => {
+        const sr = buffer.sampleRate || 44100;
+        const len = buffer.length || 0;
+
+        let peak = 0;
+        let clipCount = 0;
+        let sumSq = 0;
+        let n = 0;
+
+        const ch0 = buffer.getChannelData(0);
+        const ch1 = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
+
+        for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+          const data = buffer.getChannelData(ch);
+          for (let i = 0; i < data.length; i++) {
+            const x = data[i];
+            const ax = Math.abs(x);
+            if (ax > peak) peak = ax;
+            if (ax >= 0.999) clipCount++;
+            sumSq += x * x;
+            n++;
+          }
+        }
+
+        const rms = Math.sqrt(sumSq / Math.max(1, n));
+        const peakDb = 20 * Math.log10(Math.max(1e-12, peak));
+        const rmsDb = 20 * Math.log10(Math.max(1e-12, rms));
+        const crestDb = peakDb - rmsDb;
+
+        let phaseCorr = 1.0;
+        if (ch1) {
+          const maxSamples = Math.min(len, sr * 20);
+          let sxy = 0, sxx = 0, syy = 0;
+          for (let i = 0; i < maxSamples; i++) {
+            const x = ch0[i];
+            const y = ch1[i];
+            sxy += x * y;
+            sxx += x * x;
+            syy += y * y;
+          }
+          phaseCorr = sxy / Math.max(1e-12, Math.sqrt(sxx * syy));
+          phaseCorr = Math.max(-1, Math.min(1, phaseCorr));
+        }
+
+        const ext = (file?.name || "").toLowerCase();
+        const mp3Flag = ext.endsWith(".mp3") || file?.type === "audio/mpeg";
+
+        const hf = app.estimateHighFreqEnergy(buffer);
+        const mp3Heuristic = mp3Flag || hf.hfRatio < 0.03;
+
+        const headroomDb = -peakDb;
+
+        return {
+          peak,
+          peakDb,
+          rmsDb,
+          crestDb,
+          clipCount,
+          phaseCorr,
+          headroomDb,
+          mp3Heuristic
+        };
+      },
+
+      estimateHighFreqEnergy: (buffer) => {
+        const sr = buffer.sampleRate || 44100;
+        const data = buffer.getChannelData(0);
+        const n = Math.min(data.length, sr * 10);
+        const hop = 1024;
+        const win = 2048;
+
+        let hfSum = 0;
+        let totalSum = 0;
+
+        for (let start = 0; start + win < n; start += hop) {
+          let zcr = 0;
+          for (let i = start + 1; i < start + win; i++) {
+            if ((data[i - 1] >= 0) !== (data[i] >= 0)) zcr++;
+          }
+          totalSum += 1;
+          if (zcr > 260) hfSum += 1;
+        }
+
+        const hfRatio = totalSum ? (hfSum / totalSum) : 0.05;
+        return { hfRatio };
+      },
+
+      computeProgramTargets: (integrity, presetKey) => {
+        const corr = integrity.phaseCorr ?? 1;
+        const crest = integrity.crestDb ?? 10;
+        const headroom = integrity.headroomDb ?? 1;
+
+        let style = presetKey || "streaming";
+        if (!PRESETS[style]) style = "streaming";
+
+        const resolved = (app._resolved && app._resolved.genre) ? app._resolved.genre : null;
+        const genre = resolved || style;
+
+        const comp = {
+          low:  { threshold: -24, ratio: 2.4, attack: 0.010, release: 0.200, knee: 18 },
+          mid:  { threshold: -26, ratio: 2.0, attack: 0.012, release: 0.220, knee: 18 },
+          high: { threshold: -30, ratio: 1.7, attack: 0.004, release: 0.180, knee: 16 }
+        };
+
+        if (genre === "trap" || genre === "car") {
+          comp.low.threshold = -22; comp.low.ratio = 2.8;
+          comp.mid.threshold = -24; comp.mid.ratio = 2.2;
+          comp.high.threshold = -28; comp.high.ratio = 1.9;
+        }
+        if (genre === "vocal") {
+          comp.mid.threshold = -28; comp.mid.ratio = 1.9;
+          comp.high.threshold = -32; comp.high.ratio = 1.6;
+        }
+
+        const safeWidthMax = Math.max(0, Math.min(100, (corr < 0.2 ? 25 : corr < 0.5 ? 55 : 100)));
+        const harshCut = Math.max(0, Math.min(6, (crest < 8 ? 4 : 2)));
+        const subTighten = Math.max(0, Math.min(6, headroom < 1.2 ? 4 : 2));
+
+        return { comp, safeWidthMax, harshCut, subTighten, genre };
+      },
+
+      createMasterChain: (ctx, params, integrity, presetKey, isRealtime) => {
+        const targets = app.computeProgramTargets(integrity, presetKey);
+
+        const input = ctx.createGain();
+
+        const pre = ctx.createGain();
+        pre.gain.value = 1.0;
+
+        const deHarsh = ctx.createBiquadFilter();
+        deHarsh.type = "peaking";
+        deHarsh.frequency.value = 3300;
+        deHarsh.Q.value = 1.2;
+        deHarsh.gain.value = -targets.harshCut;
+
+        const vocalLift = ctx.createBiquadFilter();
+        vocalLift.type = "peaking";
+        vocalLift.frequency.value = 3000;
+        vocalLift.Q.value = 0.7;
+        vocalLift.gain.value = Math.max(0, Math.min(3, (params.clarity || 0) * 0.35));
+
+        const subControl = ctx.createBiquadFilter();
+        subControl.type = "lowshelf";
+        subControl.frequency.value = 90;
+        subControl.gain.value = Math.max(-6, Math.min(6, (params.bass || 0) - targets.subTighten));
+
+        const split = ctx.createChannelSplitter(2);
+        const merge = ctx.createChannelMerger(2);
+
+        const monoMaker = ctx.createGain();
+        const monoL = ctx.createGain();
+        const monoR = ctx.createGain();
+        monoL.gain.value = 0.5;
+        monoR.gain.value = 0.5;
+
+        const lowLP = ctx.createBiquadFilter();
+        lowLP.type = "lowpass";
+        lowLP.frequency.value = 140;
+        lowLP.Q.value = 0.7;
+
+        const highHP_L = ctx.createBiquadFilter();
+        highHP_L.type = "highpass";
+        highHP_L.frequency.value = 140;
+        highHP_L.Q.value = 0.7;
+
+        const highHP_R = ctx.createBiquadFilter();
+        highHP_R.type = "highpass";
+        highHP_R.frequency.value = 140;
+        highHP_R.Q.value = 0.7;
+
+        const lowToL = ctx.createGain();
+        const lowToR = ctx.createGain();
+        lowToL.gain.value = 1.0;
+        lowToR.gain.value = 1.0;
+
+        const hiGainL = ctx.createGain();
+        const hiGainR = ctx.createGain();
+        hiGainL.gain.value = 1.0;
+        hiGainR.gain.value = 1.0;
+
+        const haas = app.createHaasWidener(ctx);
+
+        const safeWidth = Math.min(targets.safeWidthMax, Math.max(0, Math.min(100, params.width || 0)));
+        app.setWidenerAmount(haas, safeWidth, ctx.currentTime);
+
+        const mb = app.createMultiband(ctx, targets.comp);
+
+        const sat = app.createSaturation(ctx);
+
+        const loudGain = ctx.createGain();
+        const _loudGain = loudGain;
+        const g = Math.max(0.25, 1 + ((params.loudness || 0) / 10));
+        loudGain.gain.value = g;
+
+        const limiter = app.createSoftLimiter(ctx);
+        app.setLimiterCeiling(limiter, (STATE._platformCeilingDb ?? -1.0), ctx.currentTime);
+
+        input.connect(pre);
+        pre.connect(deHarsh);
+        deHarsh.connect(vocalLift);
+        vocalLift.connect(subControl);
+
+        subControl.connect(mb.input);
+
+        mb.output.connect(split);
+
+        split.connect(monoL, 0);
+        split.connect(monoR, 1);
+        monoL.connect(monoMaker);
+        monoR.connect(monoMaker);
+        monoMaker.connect(lowLP);
+
+        split.connect(highHP_L, 0);
+        split.connect(highHP_R, 1);
+
+        lowLP.connect(lowToL);
+        lowLP.connect(lowToR);
+
+        highHP_L.connect(hiGainL);
+        highHP_R.connect(hiGainR);
+
+        const hiMerge = ctx.createChannelMerger(2);
+        hiGainL.connect(hiMerge, 0, 0);
+        hiGainR.connect(hiMerge, 0, 1);
+        hiMerge.connect(haas.splitter);
+const hiOut = ctx.createChannelMerger(2);
+        haas.merger.connect(hiOut);
+
+        lowToL.connect(merge, 0, 0);
+        lowToR.connect(merge, 0, 1);
+
+        hiOut.connect(merge);
+
+        merge.connect(sat.input);
+        sat.output.connect(loudGain);
+        loudGain.connect(limiter.input);
+
+        return { input, output: limiter.output, limiter, sat, mb, haas, targets, _loudGain };
+      },
+
+      createMultiband: (ctx, compCfg) => {
+        const input = ctx.createGain();
+
+        const lowLP = ctx.createBiquadFilter();
+        lowLP.type = "lowpass";
+        lowLP.frequency.value = 140;
+        lowLP.Q.value = 0.7;
+
+        const midHP = ctx.createBiquadFilter();
+        midHP.type = "highpass";
+        midHP.frequency.value = 140;
+        midHP.Q.value = 0.7;
+
+        const midLP = ctx.createBiquadFilter();
+        midLP.type = "lowpass";
+        midLP.frequency.value = 4200;
+        midLP.Q.value = 0.7;
+
+        const highHP = ctx.createBiquadFilter();
+        highHP.type = "highpass";
+        highHP.frequency.value = 4200;
+        highHP.Q.value = 0.7;
+
+        const lowComp = ctx.createDynamicsCompressor();
+        const midComp = ctx.createDynamicsCompressor();
+        const highComp = ctx.createDynamicsCompressor();
+
+        const apply = (node, c) => {
+          node.threshold.value = c.threshold;
+          node.ratio.value = c.ratio;
+          node.attack.value = c.attack;
+          node.release.value = c.release;
+          node.knee.value = c.knee;
+        };
+        apply(lowComp, compCfg.low);
+        apply(midComp, compCfg.mid);
+        apply(highComp, compCfg.high);
+
+        const lowG = ctx.createGain();
+        const midG = ctx.createGain();
+        const highG = ctx.createGain();
+        lowG.gain.value = 1.0;
+        midG.gain.value = 1.0;
+        highG.gain.value = 1.0;
+
+        const sum = ctx.createGain();
+
+        input.connect(lowLP);
+        lowLP.connect(lowComp);
+        lowComp.connect(lowG);
+        lowG.connect(sum);
+
+        input.connect(midHP);
+        midHP.connect(midLP);
+        midLP.connect(midComp);
+        midComp.connect(midG);
+        midG.connect(sum);
+
+        input.connect(highHP);
+        highHP.connect(highComp);
+        highComp.connect(highG);
+        highG.connect(sum);
+
+        return { input, output: sum, lowComp, midComp, highComp };
+      },
+
+      createSaturation: (ctx) => {
+        const input = ctx.createGain();
+        const drive = ctx.createGain();
+        const shaper = ctx.createWaveShaper();
+        const mix = ctx.createGain();
+        const dry = ctx.createGain();
+        const sum = ctx.createGain();
+
+        drive.gain.value = 1.25;
+        mix.gain.value = 0.22;
+        dry.gain.value = 0.78;
+
+        const curve = new Float32Array(65536);
+        for (let i = 0; i < curve.length; i++) {
+          const x = (i / (curve.length - 1)) * 2 - 1;
+          const y = Math.tanh(2.2 * x);
+          curve[i] = y;
+        }
+        shaper.curve = curve;
+        shaper.oversample = "4x";
+
+        input.connect(dry);
+        input.connect(drive);
+        drive.connect(shaper);
+        shaper.connect(mix);
+
+        dry.connect(sum);
+        mix.connect(sum);
+
+        return { input, output: sum, drive, mix, dry, shaper };
+      },
+updatePlayButton: () => {
+        const icon = document.getElementById("playIcon");
+        const overlay = document.getElementById("playOverlay");
+        if (STATE.isPlaying) {
+          icon.className = "pause-bars";
+          overlay.style.opacity = "0";
+        } else {
+          icon.className = "play-triangle";
+          overlay.style.opacity = "1";
+        }
+      },
+
+      setupWaveformCanvas: () => {
+        const canvas = document.getElementById("waveformCanvas");
+        const parent = canvas.parentElement;
+        const dpr = window.devicePixelRatio || 1;
+
+        const w = parent.clientWidth;
+        const h = parent.clientHeight;
+
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        STATE.waveform.canvas = canvas;
+        STATE.waveform.ctx = ctx;
+        STATE.waveform.dpr = dpr;
+        STATE.waveform.w = w;
+        STATE.waveform.h = h;
+      },
+
+      drawWaveform: () => {
+        const canvas = STATE.waveform.canvas;
+        const ctx = STATE.waveform.ctx;
+        if (!canvas || !ctx || !STATE.audioBuffer) return;
+
+        const w = STATE.waveform.w;
+        const h = STATE.waveform.h;
+        const cy = h / 2;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const data = STATE.audioBuffer.getChannelData(0);
+        const step = Math.max(1, Math.floor(data.length / w));
+        const amp = h / 2;
+
+        ctx.fillStyle = STATE.isMastered ? "#00e676" : "#2962ff";
+
+        for (let x = 0; x < w; x++) {
+          let min = 1.0, max = -1.0;
+          const start = x * step;
+          const end = Math.min(data.length, start + step);
+          for (let i = start; i < end; i++) {
+            const d = data[i];
+            if (d < min) min = d;
+            if (d > max) max = d;
+          }
+          const y = cy + min * amp;
+          const hh = Math.max(1, (max - min) * amp);
+          ctx.fillRect(x, y, 1, hh);
+        }
+      },
+
+      navigateTo: (id) => {
+        if (STATE.screen !== id) STATE.history.push(STATE.screen);
+        document.querySelectorAll("section").forEach(e => e.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+        STATE.screen = id;
+
+        if (id === "screen-preview") {
+          app.setupWaveformCanvas();
+          app.drawWaveform();
+        }
+        if (id === "screen-export" && STATE.audioBuffer) {
+          const platformKey = (app._resolved && app._resolved.platform) ? app._resolved.platform : "spotify";
+          const platform = PLATFORM_TARGETS[platformKey] || PLATFORM_TARGETS.spotify;
+          const meas = app.computeIntegratedLUFS(STATE.audioBuffer).lufs;
+          const tp = app.estimateTruePeakDb(STATE.audioBuffer, 4);
+          const integrity = app.analyzeIntegrity(STATE.audioBuffer, STATE.file);
+          app.updateMasterReport({
+            platformKey,
+            platform,
+            lufs: meas,
+            tpDb: tp,
+            phaseCorr: integrity.phaseCorr ?? 1,
+            issues: []
+          });
+        }
+        app.updateButtons();
+      },
+
+      goBack: () => {
+        if (!STATE.history.length) return;
+        const prev = STATE.history.pop();
+        document.querySelectorAll("section").forEach(e => e.classList.add("hidden"));
+        document.getElementById(prev).classList.remove("hidden");
+        STATE.screen = prev;
+        app.updateButtons();
+      },
+
+      nextStep: () => {
+        if (STATE.screen === "screen-upload") app.runAnalysis();
+        else if (STATE.screen === "screen-preview") app.navigateTo("screen-export");
+      },
+
+      updateButtons: () => {
+        const btnBack = document.getElementById("btnBack");
+        const btnAction = document.getElementById("btnAction");
+
+        btnBack.classList.toggle("hidden", STATE.screen === "screen-upload");
+        btnAction.classList.remove("hidden");
+
+        if (STATE.screen === "screen-upload") {
+          btnAction.innerText = "Analyze Track";
+          btnAction.disabled = !STATE.file || !STATE.audioBuffer;
+        } else if (STATE.screen === "screen-preview") {
+          btnAction.innerText = "Export";
+          btnAction.disabled = false;
+        } else {
+          btnAction.classList.add("hidden");
+        }
+      },
+
+      setFormat: (fmt, el) => {
+        STATE.format = fmt;
+        document.querySelectorAll(".format-option").forEach(e => e.classList.remove("active"));
+        el.classList.add("active");
+      },
+
+      downloadMaster: async () => {
+        if (!STATE.audioBuffer) {
+          app.showModal("No audio loaded.");
+          return;
+        }
+
+        if (!STATE.isMastered) {
+          app.showModal("Switch to Mastered mode before exporting.");
+          return;
+        }
+
+        if (!app._resolved) {
+          if (STATE.mode.kind === "manual") app.applyManualMode();
+          else app.applySmartMode();
+        }
+
+        const platformKey = (app._resolved && app._resolved.platform) ? app._resolved.platform : "spotify";
+        const platform = PLATFORM_TARGETS[platformKey] || PLATFORM_TARGETS.spotify;
+
+        const btn = document.getElementById("btnDownload");
+        btn.disabled = true;
+        btn.innerText = "Rendering...";
+
+        try {
+          const params1 = { ...STATE.params };
+          const pass1 = await app.renderMasterOffline(STATE.audioBuffer, params1, { ceilingDb: platform.ceilingDb });
+
+          const lufs1 = app.computeIntegratedLUFS(pass1).lufs;
+          const delta = platform.targetLUFS - lufs1;
+
+          const params2 = { ...STATE.params };
+          params2.loudness = Math.max(-10, Math.min(10, (params2.loudness || 0) + (delta / 2.0)));
+
+          const pass2 = await app.renderMasterOffline(STATE.audioBuffer, params2, { ceilingDb: platform.ceilingDb });
+
+          const qc = app.runQC(pass2, platformKey);
+          app.updateMasterReport({
+            platformKey,
+            platform,
+            lufs: qc.lufs,
+            tpDb: qc.tpDb,
+            phaseCorr: qc.phaseCorr,
+            issues: qc.issues
+          });
+
+          if (qc.issues.length) {
+            app.showModal("QC Gate blocked export:\n\n" + qc.issues.join(" • "));
+            return;
+          }
+
+          const bitDepth = (STATE.format === "wav16") ? 16 : 24;
+          const wavBlob = app.encodeWavFromAudioBuffer(pass2, { bitDepth });
+
+          const baseName = (STATE.file?.name || "Track").replace(/\.[^/.]+$/, "");
+          const fileName = `MEGA_MASTER_${baseName}_${platformKey}_${bitDepth}bit.wav`;
+
+          app.triggerDownload(wavBlob, fileName);
+          app.showToast("Downloading WAV...");
+        } catch (e) {
+          console.error(e);
+          app.showModal("Export failed. Try a shorter file or WAV/AIFF input.");
+        } finally {
+          btn.disabled = false;
+          btn.innerText = "Download Master";
+        }
+      },
+
+      renderMasterOffline: async (buffer, params, opts) => {
+        const channels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const length = buffer.length;
+
+        const offline = new OfflineAudioContext(channels, length, sampleRate);
+
+        const source = offline.createBufferSource();
+        source.buffer = buffer;
+
+        const integrity = app.analyzeIntegrity(buffer, STATE.file);
+        const presetKey = app.getActivePresetKey() || "streaming";
+
+        STATE._platformCeilingDb = (opts && typeof opts.ceilingDb === "number") ? opts.ceilingDb : (STATE._platformCeilingDb ?? -1.0);
+
+        const chain = app.createMasterChain(offline, params, integrity, presetKey, false);
+        source.connect(chain.input);
+        chain.output.connect(offline.destination);
+
+        source.start(0);
+        const rendered = await offline.startRendering();
+        return rendered;
+      },
+
+      encodeWavFromAudioBuffer: (audioBuffer, { bitDepth = 24 } = {}) => {
+        const numChannels = audioBuffer.numberOfChannels;
+        const sampleRate = audioBuffer.sampleRate;
+        const length = audioBuffer.length;
+
+        const bytesPerSample = bitDepth === 16 ? 2 : 3;
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+        const dataSize = length * blockAlign;
+        const bufferSize = 44 + dataSize;
+
+        const arrayBuffer = new ArrayBuffer(bufferSize);
+        const view = new DataView(arrayBuffer);
+
+        const writeString = (offset, str) => {
+          for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+        };
+
+        writeString(0, "RIFF");
+        view.setUint32(4, 36 + dataSize, true);
+        writeString(8, "WAVE");
+
+        writeString(12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+
+        writeString(36, "data");
+        view.setUint32(40, dataSize, true);
+
+        const chData = [];
+        for (let ch = 0; ch < numChannels; ch++) chData.push(audioBuffer.getChannelData(ch));
+
+        let offset = 44;
+
+        const clamp = (x) => Math.max(-1, Math.min(1, x));
+
+        if (bitDepth === 16) {
+          for (let i = 0; i < length; i++) {
+            for (let ch = 0; ch < numChannels; ch++) {
+              const s = clamp(chData[ch][i]);
+              const v = s < 0 ? s * 32768 : s * 32767;
+              view.setInt16(offset, v, true);
+              offset += 2;
+            }
+          }
+        } else {
+          for (let i = 0; i < length; i++) {
+            for (let ch = 0; ch < numChannels; ch++) {
+              const s = clamp(chData[ch][i]);
+              let v = Math.round(s * 8388607);
+
+              if (v < 0) v += 16777216;
+
+              view.setUint8(offset, v & 255); offset += 1;
+              view.setUint8(offset, (v >> 8) & 255); offset += 1;
+              view.setUint8(offset, (v >> 16) & 255); offset += 1;
+            }
+          }
+        }
+
+        return new Blob([view], { type: "audio/wav" });
+      },
+
+      triggerDownload: (blob, filename) => {
+        if (STATE.lastObjectUrl) URL.revokeObjectURL(STATE.lastObjectUrl);
+
+        const url = URL.createObjectURL(blob);
+        STATE.lastObjectUrl = url;
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      },
+
+      reset: () => {
+        try { app.stopAudio(); } catch (_) {}
+
+        if (STATE.lastObjectUrl) {
+          URL.revokeObjectURL(STATE.lastObjectUrl);
+          STATE.lastObjectUrl = null;
+
+        STATE._platformCeilingDb = -1.0;
+        app._resolved = null;
+        STATE.monitor = null;
+        STATE.translation = "studio";
+        }
+
+        STATE.file = null;
+        STATE.audioBuffer = null;
+        STATE._chain = null;
+        STATE.history = [];
+        STATE.isPlaying = false;
+        STATE.isMastered = false;
+        STATE.params = { loudness: 0, bass: 0, clarity: 0, width: 0 };
+        STATE.format = "wav";
+
+        document.getElementById("fileInfoDisplay").classList.add("hidden");
+        document.getElementById("autoDetectResults").classList.add("hidden");
+        document.getElementById("mp3Warning").style.display = "none";
+        document.getElementById("fileName").innerText = "Song.wav";
+
+        document.getElementById("abToggle").classList.remove("mastered");
+
+        document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+
+        app.updateSliderUI();
+        app.drawWaveform();
+
+        app.navigateTo("screen-upload");
+      },
+
+      updateMasterReport: ({ platformKey, platform, lufs, tpDb, phaseCorr, issues }) => {
+        const target = platform?.targetLUFS;
+        const ceiling = platform?.ceilingDb;
+
+        const badge = document.getElementById("reportBadge");
+        const elTarget = document.getElementById("reportTarget");
+        const elLufs = document.getElementById("reportLufs");
+        const elTP = document.getElementById("reportTP");
+        const elSafety = document.getElementById("reportSafety");
+        const elMono = document.getElementById("reportMono");
+        const elPlat = document.getElementById("reportPlatform");
+        const elNotes = document.getElementById("reportNotes");
+
+        const ok = !issues || issues.length === 0;
+
+        if (badge) {
+          badge.innerText = ok ? "READY" : "QC FAIL";
+          badge.style.color = ok ? "var(--accent-green)" : "var(--accent-orange)";
+        }
+
+        if (elTarget) elTarget.innerText = `${platform?.name || platformKey} • ${target?.toFixed(1)} LUFS`;
+        if (elLufs) elLufs.innerText = `${(lufs ?? 0).toFixed(1)} LUFS`;
+        if (elTP) elTP.innerText = `${(tpDb ?? 0).toFixed(1)} dBTP`;
+
+        const peakSafe = (tpDb ?? 0) <= ((ceiling ?? -1.0) + 0.1);
+        if (elSafety) elSafety.innerText = peakSafe ? `Safe (≤ ${ceiling.toFixed(1)} dBTP)` : `Hot (> ${ceiling.toFixed(1)} dBTP)`;
+
+        const monoOk = (phaseCorr ?? 1) >= 0.15;
+        if (elMono) elMono.innerText = monoOk ? `Stable (${phaseCorr.toFixed(2)})` : `Risk (${phaseCorr.toFixed(2)})`;
+
+        if (elPlat) elPlat.innerText = ok ? "Pass" : "Blocked";
+        if (elNotes) {
+          if (ok) elNotes.innerText = "QC Gate passed. Master is platform-ready.";
+          else elNotes.innerText = "QC Gate blocked export: " + issues.join(" • ");
+        }
+      },
+
+      showToast: (msg) => {
+        const t = document.createElement("div");
+        t.style.cssText = "position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#333; color:#fff; padding:10px 20px; border-radius:20px; z-index:999; font-size:0.9rem; box-shadow:0 5px 15px rgba(0,0,0,0.3);";
+        t.innerText = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2600);
+      },
+
+      showModal: (msg) => {
+        document.getElementById("errorMessage").innerText = msg;
+        document.getElementById("errorModal").classList.remove("hidden");
+      }
+    };
+
+    window.app = app;
+
+    window.addEventListener("error", (ev) => {
+      try {
+        const msg = (ev && ev.message) ? ev.message : "Unknown error";
+        if (window.app && app.showModal) app.showModal("App error: " + msg);
+      } catch (_) {}
+    });
+
+    window.addEventListener("DOMContentLoaded", app.init);
+  </script>
+</body>
+</html>
